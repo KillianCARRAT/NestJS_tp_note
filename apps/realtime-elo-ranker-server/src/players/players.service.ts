@@ -12,6 +12,7 @@ import {
   PlayerUpdatedEvent,
   PlayerDeletedEvent,
 } from '../events/events.service';
+import { RankingCacheService } from '../ranking/cache/ranking-cache.service';
 
 @Injectable()
 export class PlayersService {
@@ -19,6 +20,7 @@ export class PlayersService {
     @InjectRepository(Player)
     private readonly playerRepository: Repository<Player>,
     private readonly eventsService: EventsService,
+    private readonly rankingCacheService: RankingCacheService,
   ) {}
 
   async create(name: string, initialElo: number = 1000): Promise<Player> {
@@ -48,6 +50,10 @@ export class PlayersService {
       timestamp: new Date(),
     };
     this.eventsService.emitPlayerCreated(event);
+    this.rankingCacheService.upsert({
+      playerId: savedPlayer.id,
+      elo: savedPlayer.elo,
+    });
 
     return savedPlayer;
   }
@@ -95,6 +101,10 @@ export class PlayersService {
       timestamp: new Date(),
     };
     this.eventsService.emitPlayerUpdated(event);
+    this.rankingCacheService.upsert({
+      playerId: updatedPlayer.id,
+      elo: updatedPlayer.elo,
+    });
 
     return updatedPlayer;
   }
@@ -116,6 +126,10 @@ export class PlayersService {
       timestamp: new Date(),
     };
     this.eventsService.emitPlayerUpdated(event);
+    this.rankingCacheService.upsert({
+      playerId: updatedPlayer.id,
+      elo: updatedPlayer.elo,
+    });
 
     return updatedPlayer;
   }
@@ -129,6 +143,7 @@ export class PlayersService {
       timestamp: new Date(),
     };
     this.eventsService.emitPlayerDeleted(event);
+    this.rankingCacheService.remove(player.id);
 
     await this.playerRepository.remove(player);
   }

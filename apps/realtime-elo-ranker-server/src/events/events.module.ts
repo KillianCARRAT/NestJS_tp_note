@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { EventsService } from './events.service';
 import { EventsController } from './events.controller';
+import { RankingEventsController } from './ranking-events.controller';
 
 @Module({
   imports: [
@@ -15,7 +16,7 @@ import { EventsController } from './events.controller';
       ignoreErrors: false,
     }),
   ],
-  controllers: [EventsController],
+  controllers: [EventsController, RankingEventsController],
   providers: [EventsService],
   exports: [EventsService],
 })
