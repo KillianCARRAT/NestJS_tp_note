@@ -6,6 +6,7 @@ import {
   Param,
   Query,
   ParseIntPipe,
+  NotFoundException,
 } from '@nestjs/common';
 import { RankingService } from './ranking.service';
 import { MatchResultDto } from './dto/match-result.dto';
@@ -29,8 +30,19 @@ export class RankingController {
    * GET /ranking
    */
   @Get()
-  async getRanking(): Promise<Player[]> {
-    return await this.rankingService.getRanking();
+  async getRanking(): Promise<Array<{ id: string; rank: number }>> {
+    const ranking = await this.rankingService.getRanking();
+
+    if (ranking.length === 0) {
+      throw new NotFoundException(
+        "Le classement n'est pas disponible car aucun joueur n'existe",
+      );
+    }
+
+    return ranking.map((player) => ({
+      id: player.name,
+      rank: player.elo,
+    }));
   }
 
   /**

@@ -11,10 +11,17 @@ import {
   RankingUpdatedEvent,
 } from '../events/events.service';
 import { Player } from '../players/player.entity';
+import { RankingCacheService } from './cache/ranking-cache.service';
 
 export interface MatchResult {
   winnerId: string;
   loserId: string;
+  isDraw?: boolean;
+}
+
+export interface MatchResultByName {
+  winner: string;
+  loser: string;
   isDraw?: boolean;
 }
 
@@ -33,6 +40,7 @@ export class RankingService {
     private readonly playersService: PlayersService,
     private readonly eloService: EloService,
     private readonly eventsService: EventsService,
+    private readonly rankingCacheService: RankingCacheService,
   ) {}
 
   async recordMatch(matchResult: MatchResult): Promise<UpdatedRanking> {
@@ -116,8 +124,35 @@ export class RankingService {
     };
   }
 
+  async recordMatchByPlayerName(
+    matchResult: MatchResultByName,
+  ): Promise<UpdatedRanking> {
+    const { winner, loser, isDraw = false } = matchResult;
+    const winnerPlayer = await this.playersService.findByName(winner);
+    const loserPlayer = await this.playersService.findByName(loser);
+
+    if (!winnerPlayer || !loserPlayer) {
+      throw new NotFoundException('Un ou plusieurs joueurs introuvables');
+    }
+
+    return this.recordMatch({
+      winnerId: winnerPlayer.id,
+      loserId: loserPlayer.id,
+      isDraw,
+    });
+  }
+
   async getRanking(): Promise<Player[]> {
-    return await this.playersService.getRanking();
+    const ranking = await this.playersService.getRanking();
+
+    ranking.forEach((player) => {
+      this.rankingCacheService.upsert({
+        playerId: player.id,
+        elo: player.elo,
+      });
+    });
+
+    return ranking;
   }
 
   async getRankingWithPositions(): Promise<Array<Player & { rank: number }>> {
