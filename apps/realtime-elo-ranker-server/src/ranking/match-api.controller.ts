@@ -13,7 +13,9 @@ export class MatchApiController {
   constructor(private readonly rankingService: RankingService) {}
 
   @Post()
-  async recordMatch(@Body() body: { winner?: string; loser?: string; draw?: boolean }) {
+  async recordMatch(
+    @Body() body: { winner?: string; loser?: string; draw?: boolean },
+  ) {
     const winner = body?.winner?.trim();
     const loser = body?.loser?.trim();
     const isDraw = body?.draw === true;

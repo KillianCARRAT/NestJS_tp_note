@@ -156,8 +156,4 @@ export class PlayersService {
       },
     });
   }
-
-  async count(): Promise<number> {
-    return await this.playerRepository.count();
-  }
 }
